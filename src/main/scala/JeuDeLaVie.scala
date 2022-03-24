@@ -70,15 +70,16 @@ object JeuDeLaVie {
     def afficherGrilleAux(grilleVierge: Grille, grille: Grille, colMax: Int): Unit = grilleVierge match{
       case Nil => print("")
       case t::q =>
-        if(!grille.contains(t)) {
-          if(t._2 == colMax) print(" \n") else print(" ")
-          afficherGrilleAux(q, grille, colMax)
-        } else {
-          if(t._2 == colMax) print("x\n") else print("x")
-          afficherGrilleAux(q, grille, colMax)
-        }
+    if(!grille.contains(t)) {
+      if(t._2 == colMax) print(" \n") else print(" ")
+      afficherGrilleAux(q, grille, colMax)
+    } else {
+      if(t._2 == colMax) print("x\n") else print("x")
+      afficherGrilleAux(q, grille, colMax)
     }
-    afficherGrilleAux(creerGrilleVierge(coinSuperieurGauche(g), coinInferieurDroit(g), coinSuperieurGauche(g)._2), g, coinInferieurDroit(g)._2)
+  }
+    if(g == Nil) println("Aucune cellule n'a survécue")
+    else afficherGrilleAux(creerGrilleVierge(coinSuperieurGauche(g), coinInferieurDroit(g), coinSuperieurGauche(g)._2), g, coinInferieurDroit(g)._2)
   }
 
   /**
@@ -150,6 +151,16 @@ object JeuDeLaVie {
   }
 
   /**
+   * Methode permettant de récupérer une grille qui est autour de la grille actuelle
+   */
+  def grilleAutour(g:Grille) : Grille = {
+    val coinSupGauche = coinSuperieurGauche(g)
+    val coinInfDroit = coinInferieurDroit(g)
+    val grilleVierge = creerGrilleVierge((coinSupGauche._1-1, coinSupGauche._2-1), (coinInfDroit._1+1, coinInfDroit._2+1), coinSupGauche._1-1)
+    grilleVierge filter (caseActuelle => (caseActuelle._1 == coinSupGauche._1-1) || (caseActuelle._2 == coinSupGauche._2-1) || (caseActuelle._1 == coinInfDroit._1+1) || (caseActuelle._2 == coinInfDroit._2+1) )
+  }
+
+  /**
    * Methode permettant de récuperer la liste des cellules mortes voisines a une case
    * @param l la liste des cellules voisines a la case
    * @param g la grille des cellules vivantes
@@ -169,20 +180,29 @@ object JeuDeLaVie {
       case Nil => 0
       case t::q => if(g.contains(t)) 1+naissanceAux(q) else naissanceAux(q)
     }
-    candidates(g) filter (candidate => naissanceAux(voisine8(candidate._1, candidate._2)) == 3)
+    candidates(g)++grilleAutour(g) filter (candidate => naissanceAux(voisine8(candidate._1, candidate._2)) == 3)
   }
 
   def jeuDeLaVie(init: Grille, n: Int): Unit = {
+    println("Etape n°" + n)
+    println("--------------------")
     if(n == 0) afficherGrille(init) else {
       afficherGrille(init)
       jeuDeLaVie(survivantes(init)++naissances(init).distinct, n-1)
     }
   }
 
+  def voisines4(l:Int, c:Int):List[(Int, Int)] = {
+    (l,c-1)::(l-1,c)::(l,c+1)::(l+1,c)::Nil
+  }
+
+
   def main(args: Array[String]): Unit = {
-    val l = List("X X",
-                 "  ",
-                 "X X");
-    jeuDeLaVie(chainesToGrille(l), 1)
+    val l = List("  X  ",
+                 " XXX ",
+                 "XX XX",
+                 " XXX ",
+                 "  X ");
+    jeuDeLaVie(chainesToGrille(l), 6)
   }
 }
